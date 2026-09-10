@@ -1,0 +1,37 @@
+name: Compile DS Homebrew
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install devkitPro pacman
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget lsb-release python3
+          wget https://apt.devkitpro.org/install-devkitpro-pacman -O install-devkitpro-pacman.py
+          sudo python3 install-devkitpro-pacman.py
+
+      - name: Install libnds and tools
+        run: |
+          sudo dkp-pacman -Syyu --noconfirm
+          sudo dkp-pacman -S --noconfirm libnds default-makefiles grit
+
+      - name: Build NDS ROM
+        run: |
+          export DEVKITPRO=/opt/devkitpro
+          export DEVKITARM=${DEVKITPRO}/devkitARM
+          make
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CyberQuest-NDS
+          path: |
+            *.nds
+            
